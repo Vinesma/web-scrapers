@@ -43,7 +43,7 @@ sleepTimer = 30 if trackCount < 26 else 20
 timeOfArrival = (sleepTimer * trackCount) / 60
 print('\nGrabbing download links in {} second intervals.'.format(sleepTimer))
 print('This is estimated to take {} minutes'.format(timeOfArrival))
-linkData = open('./DownloadedTracks/linkData.txt', 'w')
+linkData = open('./downloadedTracks/linkData.txt', 'w')
 for trackPage in hrefList:
     res = requests.get(trackPage)
     type(res)
@@ -62,7 +62,7 @@ for trackPage in hrefList:
     print(' * TITLE : {}'.format(songTitle))
     count += 1
 
-    print('\nSleeping for {} seconds...'.format(sleepTimer))
+    print('\n...')
     time.sleep(sleepTimer)
 linkData.close()
 print('\nScraper executed successfully!')
