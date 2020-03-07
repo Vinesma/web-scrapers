@@ -60,9 +60,10 @@ for trackPage in hrefList:
 
     print('\n * TRACK {} OF {}'.format(count, trackCount))
     print(' * TITLE : {}'.format(songTitle))
+    print('\n---------------')
+    if count != trackCount:
+        time.sleep(sleepTimer)
     count += 1
 
-    print('\n...')
-    time.sleep(sleepTimer)
 linkData.close()
 print('\nScraper executed successfully!')
