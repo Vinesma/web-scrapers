@@ -5,7 +5,7 @@ cacheFile = 'musicData.json'
 prefix = 'https://downloads.khinsider.com'
 
 print("-- KHINSIDER SCRAPER --")
-print("V. 1.6\n")
+print("V. 1.7\n")
 
 def textPrompt():
     text = sys.stdin.readline()
@@ -71,11 +71,11 @@ def scrapeSongLinks(trackList):
     sleepTimer = 25 if trackCount < 26 else 15
 
     timeOfArrival = (sleepTimer * trackCount) / 60
-    print('\n[scraper] Grabbing download links in {} second intervals.'.format(sleepTimer))
+    print('[scraper] Grabbing download links in {} second intervals.'.format(sleepTimer))
     print('[scraper] This is estimated to take {} minutes\n'.format(round(timeOfArrival, 2)))
 
     for track in trackList:
-        print(' TRACK {} OF {}...'.format(count, trackCount), end='')
+        print(' TRACK {} OF {}...'.format(count, trackCount))
 
         res = requests.get(track['link'])
         type(res)
@@ -88,7 +88,6 @@ def scrapeSongLinks(trackList):
             'title': track['title'],
         }
         musicList.append(music)
-        print(' Done.')
 
         if count != trackCount:
             time.sleep(sleepTimer)
@@ -114,7 +113,6 @@ def downloadTracks(musicList):
 
         with open('./downloadedTracks/{}.mp3'.format(music['title']), 'wb') as musicFile:
             musicFile.write(download.content)
-        print('----')
 
         if count != trackCount:
             time.sleep(sleepTimer)
@@ -139,6 +137,6 @@ def main():
         if confirmationPrompt("\nDownload music now?"):
             downloadTracks(musicList)
 
-    print('\n[khscraper] Finished!')
+    print('[khscraper] Finished!')
 
 main()
