@@ -2,10 +2,9 @@ import requests, bs4, time, sys
 
 htmlFile = 'webpage.txt'
 prefix = 'https://downloads.khinsider.com'
-songTitleList = []
 
 print("-- KHINSIDER SCRAPER --")
-print("V. 1.0")
+print("V. 1.1\n")
 
 def handleText():
     text = sys.stdin.readline()
@@ -37,30 +36,33 @@ def scrapeHrefs(parsedHtml):
     selection = parsedHtml.select('.playlistDownloadSong a')
     type(selection)
 
-    trackCount = 0
-    hrefList = []
     print('[scraper] Scraping list of links from site...')
+    trackList = []
     for item in selection:
         link = item.get('href')
-        songTitle = item.parent.parent.find('td', class_="clickable-row").a.string
-        songTitleList.append(songTitle.replace(' ', '_'))
+        musicTitle = item.parent.parent.find('td', class_="clickable-row").a.string
 
-        hrefList.append('{}{}'.format(prefix, link))
-        trackCount += 1
-    print('[scraper] Found {} tracks.'.format(trackCount))
+        track = {
+            'title' : musicTitle.replace(' ', '_'),
+            'link': '{}{}'.format(prefix, link),
+        }
+        trackList.append(track)
+    print('[scraper] Found {} tracks.'.format(len(trackList)))
 
-    return hrefList
+    return trackList
 
-def scrapeSongLinks(hrefList):
-    trackCount = len(hrefList)
+def scrapeSongLinks(trackList):
+    trackCount = len(trackList)
     count = 1
     sleepTimer = 20 if trackCount < 26 else 15
     timeOfArrival = (sleepTimer * trackCount) / 60
-    print('[i] Grabbing download links in {} second intervals.'.format(sleepTimer))
-    print('[i] This is estimated to take {} minutes'.format(round(timeOfArrival, 2)))
+
+    print('\n[i] Grabbing download links in {} second intervals.'.format(sleepTimer))
+    print('[i] This is estimated to take {} minutes\n'.format(round(timeOfArrival, 2)))
+    
     linkData = open('./downloadedTracks/linkData.txt', 'w')
-    for trackPage in hrefList:
-        res = requests.get(trackPage)
+    for track in trackList:
+        res = requests.get(track['link'])
         type(res)
 
         res.raise_for_status()
@@ -69,12 +71,12 @@ def scrapeSongLinks(hrefList):
         selection = parsedHtml.find('span', class_="songDownloadLink")
 
         link = selection.parent['href']
-        songTitle = songTitleList.pop(0)
+        musicTitle = track['title']
 
-        linkData.write('{} -o {}.mp3\n'.format(link, songTitle))
+        linkData.write('{} -o {}.mp3\n'.format(link, musicTitle))
 
-        print('\n TRACK {} OF {}'.format(count, trackCount))
-        print(' TITLE : {}'.format(songTitle))
+        print(' TRACK {} OF {}'.format(count, trackCount))
+        print(' TITLE : {}'.format(musicTitle))
         print('---------------')
         if count != trackCount:
             time.sleep(sleepTimer)
@@ -87,8 +89,8 @@ def main():
     link = handleText()
     downloadWebpage(link)
     html = parseHtml()
-    hrefs = scrapeHrefs(html)
-    scrapeSongLinks(hrefs)
+    trackList = scrapeHrefs(html)
+    scrapeSongLinks(trackList)
     
     print('\n[khscraper] Finished!')
 
