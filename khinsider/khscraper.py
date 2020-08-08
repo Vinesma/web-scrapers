@@ -1,10 +1,11 @@
 import requests, bs4, time, sys, json, os
 
 htmlFile = 'webpage.txt'
+cacheFile = 'musicData.json'
 prefix = 'https://downloads.khinsider.com'
 
 print("-- KHINSIDER SCRAPER --")
-print("V. 1.5\n")
+print("V. 1.6\n")
 
 def textPrompt():
     text = sys.stdin.readline()
@@ -22,25 +23,16 @@ def confirmationPrompt(promptText):
 
     return False
 
-def fileExists(filename):
-    if os.path.isfile(filename):
-        return True
-
-    return False
-
 def cleanDir():
-    if fileExists(htmlFile):
+    if os.path.isfile(htmlFile):
         os.remove(htmlFile)
-    if fileExists('musicData.json'):
-        os.remove('musicData.json')
-    print("\n[i] Cleanup complete!")
+    if os.path.isfile(cacheFile):
+        os.remove(cacheFile)
 
 def downloadWebpage(link):
-    print("[page] Downloading webpage...")
+    print("[download] Downloading webpage...")
     response = requests.get(link)
     type(response)
-
-    # Raises an exception if the download is unsuccessful
     response.raise_for_status()
 
     with open(htmlFile, 'wb') as saveFile:
@@ -79,15 +71,14 @@ def scrapeSongLinks(trackList):
     sleepTimer = 25 if trackCount < 26 else 15
 
     timeOfArrival = (sleepTimer * trackCount) / 60
-    print('\n[link-scraper] Grabbing download links in {} second intervals.'.format(sleepTimer))
-    print('[link-scraper] This is estimated to take {} minutes\n'.format(round(timeOfArrival, 2)))
+    print('\n[scraper] Grabbing download links in {} second intervals.'.format(sleepTimer))
+    print('[scraper] This is estimated to take {} minutes\n'.format(round(timeOfArrival, 2)))
 
     for track in trackList:
-        res = requests.get(track['link'])
-        type(res)
-
         print(' TRACK {} OF {}...'.format(count, trackCount), end='')
 
+        res = requests.get(track['link'])
+        type(res)
         res.raise_for_status()
 
         parsedHtml = bs4.BeautifulSoup(res.text, features="html.parser")
@@ -103,7 +94,7 @@ def scrapeSongLinks(trackList):
             time.sleep(sleepTimer)
         count += 1
 
-    with open('musicData.json', 'w') as musicData:
+    with open(cacheFile, 'w') as musicData:
         musicData.write(json.dumps(musicList))
 
     return musicList
@@ -112,15 +103,13 @@ def downloadTracks(musicList):
     trackCount = len(musicList)
     count = 1
     sleepTimer = 10
-    print('\n[music] Download starting...\n')
+    print('\n[download] Starting...\n')
 
     for music in musicList:
+        print(' TRACK "{}" | ({} OF {})'.format(music['title'], count, trackCount))
+
         download = requests.get(music['link'])
         type(download)
-
-        print(' TRACK {} OF {}...'.format(count, trackCount))
-        print(' DOWNLOADING: {}'.format(music['title']), end='')
-
         download.raise_for_status()
 
         with open('./downloadedTracks/{}.mp3'.format(music['title']), 'wb') as musicFile:
@@ -132,13 +121,13 @@ def downloadTracks(musicList):
             time.sleep(sleepTimer)
         count += 1
 
-    print('[music] Download complete!')
+    print('[download] Complete!')
     cleanDir()
 
 def main():
-    if fileExists('musicData.json') and confirmationPrompt("Found a cache file, download it?"):
-        with open('musicData.json', 'r') as jsonCache:
-            musicList = json.load(jsonCache)
+    if os.path.isfile(cacheFile) and confirmationPrompt("Found a cache file, download it?"):
+        with open(cacheFile, 'r') as cache:
+            musicList = json.load(cache)
         downloadTracks(musicList)
     else:
         print("Paste link to download from khinsider: ")
