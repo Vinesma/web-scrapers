@@ -106,7 +106,7 @@ def downloadTracks(musicList):
     print('\n[download] Starting...\n')
 
     for music in musicList:
-        print(' TRACK "{}" | ({} OF {})'.format(music['title'], count, trackCount))
+        print(' ({} OF {}) | "{}"'.format(count, trackCount, music['title']))
 
         download = requests.get(music['link'])
         type(download)
@@ -114,8 +114,7 @@ def downloadTracks(musicList):
 
         with open('./downloadedTracks/{}.mp3'.format(music['title']), 'wb') as musicFile:
             musicFile.write(download.content)
-        print(' Done.')
-        print('------------------')
+        print('----')
 
         if count != trackCount:
             time.sleep(sleepTimer)
