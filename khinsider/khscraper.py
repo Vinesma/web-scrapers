@@ -1,6 +1,6 @@
 import requests, bs4, time, sys, json, os
 
-version = "2.0"
+version = "2.1"
 htmlFile = 'webpage.txt'
 cacheFile = 'musicData.json'
 linkPrefix = 'https://downloads.khinsider.com'
@@ -33,7 +33,7 @@ def confirmationPrompt(promptText):
 
     return False
 
-def statusMessage(message, status=None, prefix="  ", suffix=""):
+def statusMessage(message, status=None, prefix="", suffix=""):
     """ Show a status message to the user, the current action is represented in brackets.
     """
     if status is not None:
@@ -54,7 +54,7 @@ def cleanDir():
 def downloadWebpage(link):
     """ Download and save a webpage as html.
     """
-    statusMessage("Downloading webpage...", status="download:webpage", prefix="\n  ")
+    statusMessage("Downloading webpage...", status="download:webpage", prefix="\n")
     response = requests.get(link)
     type(response)
     response.raise_for_status()
@@ -102,7 +102,7 @@ def scrapeSongLinks(trackList):
 
     timeOfArrival = (sleepTimer * trackCount) / 60
     statusMessage(f"Fetching download links in {sleepTimer} second intervals.", status="scraper:links")
-    statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.\n", status="scraper:links")
+    statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.", status="scraper:links", suffix="\n")
 
     for track in trackList:
         statusMessage(f"TRACK {count} OF {trackCount}...", prefix="")
@@ -172,7 +172,9 @@ def trackPicker(musicList):
         print("\n:: Music Picker ::")
         print("1) List tracks")
         print("2) Exclude/Include tracks for download")
-        print("3) Done!")
+        print("3) Select All")
+        print("4) Deselect All")
+        print("5) Done!")
 
         print("What to do?")
         response = textPrompt()
@@ -181,6 +183,14 @@ def trackPicker(musicList):
         elif response == '2':
             musicList = chooser(musicList)
         elif response == '3':
+            for item in musicList:
+                item['picked'] = True
+            clearScreen()
+        elif response == '4':
+            for item in musicList:
+                item['picked'] = False
+            clearScreen()
+        elif response == '5':
             if confirmationPrompt("Are you sure?"):
                 userIsNotDone = False
             clearScreen()
@@ -196,7 +206,7 @@ def downloadTracks(musicList):
 
     count = 1
     sleepTimer = 10
-    statusMessage("Starting...", status="download", prefix="\n  ", suffix="\n")
+    statusMessage("Starting...", status="download", prefix="\n", suffix="\n")
 
     for music in musicList:
         if music['picked']:
@@ -210,11 +220,11 @@ def downloadTracks(musicList):
             if count != trackCount:
                 time.sleep(sleepTimer)
         else:
-            statusMessage(f"({count} OF {trackCount}) | '{music['title']}'", prefix="", suffix="[Not Downloaded]")
+            statusMessage(f"({count} OF {trackCount}) | '{music['title']}'", prefix="[Not Downloaded] ")
 
         count += 1
 
-    statusMessage("Complete!", status="download", prefix="\n  ")
+    statusMessage("Complete!", status="download", prefix="\n")
     cleanDir()
 
 def main():
