@@ -1,6 +1,6 @@
 import requests, bs4, time, sys, json, os
 
-version = "2.1"
+version = "2.3"
 htmlFile = 'webpage.txt'
 cacheFile = 'musicData.json'
 linkPrefix = 'https://downloads.khinsider.com'
@@ -77,7 +77,7 @@ def scrapeHrefs(parsedHtml):
     selection = parsedHtml.select('.playlistDownloadSong a')
     type(selection)
 
-    statusMessage("Scraping list of tracks from site...", status="scraper:hrefs")
+    statusMessage("Scraping list of tracks from site...", status="scraper:tracks")
     trackList = []
     for item in selection:
         link = item.get('href')
@@ -88,7 +88,7 @@ def scrapeHrefs(parsedHtml):
             'link': f'{linkPrefix}{link}',
         }
         trackList.append(track)
-    statusMessage(f"Found {len(trackList)} tracks.", status="scraper:hrefs")
+    statusMessage(f"Found {len(trackList)} tracks.", status="scraper:tracks")
 
     return trackList
 
@@ -101,8 +101,8 @@ def scrapeSongLinks(trackList):
     sleepTimer = 25 if trackCount < 26 else 15
 
     timeOfArrival = (sleepTimer * trackCount) / 60
-    statusMessage(f"Fetching download links in {sleepTimer} second intervals.", status="scraper:links")
-    statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.", status="scraper:links", suffix="\n")
+    statusMessage(f"Fetching download links in {sleepTimer} second intervals.", status="scraper:hrefs")
+    statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.", status="scraper:hrefs", suffix="\n")
 
     for track in trackList:
         statusMessage(f"TRACK {count} OF {trackCount}...", prefix="")
@@ -185,11 +185,11 @@ def trackPicker(musicList):
         elif response == '3':
             for item in musicList:
                 item['picked'] = True
-            clearScreen()
+            listTracks(musicList)
         elif response == '4':
             for item in musicList:
                 item['picked'] = False
-            clearScreen()
+            listTracks(musicList)
         elif response == '5':
             if confirmationPrompt("Are you sure?"):
                 userIsNotDone = False
@@ -204,28 +204,34 @@ def downloadTracks(musicList):
     """
     trackCount = len(musicList)
 
-    count = 1
     sleepTimer = 10
+    downloadHappened = False
     statusMessage("Starting...", status="download", prefix="\n", suffix="\n")
 
-    for music in musicList:
+    for i, music in enumerate(musicList):
         if music['picked']:
-            statusMessage(f"({count} OF {trackCount}) | '{music['title']}'", prefix="")
+            statusMessage(f"({i+1} OF {trackCount}) | '{music['title']}'", prefix="")
             download = requests.get(music['link'])
             type(download)
             download.raise_for_status()
 
             with open(f"./downloadedTracks/{music['title']}.mp3", 'wb') as musicFile:
                 musicFile.write(download.content)
-            if count != trackCount:
+            downloadHappened = True
+
+            # Skip last item's sleep
+            if i+1 != trackCount:
                 time.sleep(sleepTimer)
+
+    if downloadHappened:
+        statusMessage("Complete!", status="download", prefix="\n")
+        cleanDir()
+    else:
+        if confirmationPrompt("Nothing has been downloaded, was this in error?"):
+            statusMessage("Understood, your cache was preserved.")
         else:
-            statusMessage(f"({count} OF {trackCount}) | '{music['title']}'", prefix="[Not Downloaded] ")
-
-        count += 1
-
-    statusMessage("Complete!", status="download", prefix="\n")
-    cleanDir()
+            statusMessage("Understood, cleaning house.")
+            cleanDir()
 
 def main():
     if os.path.isfile(cacheFile) and confirmationPrompt("Found a cache file, download it?"):
