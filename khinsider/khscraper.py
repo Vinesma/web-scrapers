@@ -1,36 +1,60 @@
 import requests, bs4, time, sys, json, os
 
+version = "1.9"
 htmlFile = 'webpage.txt'
 cacheFile = 'musicData.json'
-prefix = 'https://downloads.khinsider.com'
+linkPrefix = 'https://downloads.khinsider.com'
 
 print("-- KHINSIDER SCRAPER --")
-print("V. 1.7\n")
+print(f"V. {version}\n")
 
 def textPrompt():
-    text = sys.stdin.readline()
-    text = text.rstrip()
+    """ Read user input and return it.
+    """
 
-    return text
+    response = sys.stdin.readline()
+    response = response.rstrip()
+
+    return response
 
 def confirmationPrompt(promptText):
-    print(promptText + " (y/n)")
-    text = sys.stdin.readline()
-    text = text.rstrip().lower()
+    """ Provide a yes/no prompt to the user.
+    """
 
-    if text == 'y':
+    print(f"\t:: {promptText} (y/n)")
+    response = sys.stdin.readline()
+    response = response.rstrip().lower()
+
+    if response == 'y':
         return True
 
     return False
 
+def statusMessage(message, status=None, prefix="  ", suffix=""):
+    """ Show a status message to the user, the current action is represented in brackets.
+    """
+
+    if status is not None:
+        print(f"{prefix}[{status}] {message}{suffix}")
+    else:
+        print(f"{prefix}{message}{suffix}")
+
 def cleanDir():
+    """ Clean the directory of all temporary files.
+    """
+
     if os.path.isfile(htmlFile):
         os.remove(htmlFile)
     if os.path.isfile(cacheFile):
         os.remove(cacheFile)
 
+    statusMessage("Directory cleaned!", status="clean")
+
 def downloadWebpage(link):
-    print("[download] Downloading webpage...")
+    """ Download and save a webpage as html.
+    """
+
+    statusMessage("Downloading webpage...", status="download:webpage", prefix="\n")
     response = requests.get(link)
     type(response)
     response.raise_for_status()
@@ -40,16 +64,22 @@ def downloadWebpage(link):
             saveFile.write(chunk)
 
 def parseHtml():
+    """ Read a saved html file and return a parsed object.
+    """
+
     with open(htmlFile) as rawHtml:
         parsedHtml = bs4.BeautifulSoup(rawHtml.read(), features="html.parser")
 
     return parsedHtml
 
 def scrapeHrefs(parsedHtml):
+    """ Scrape a list of all tracks from the site.
+    """
+
     selection = parsedHtml.select('.playlistDownloadSong a')
     type(selection)
 
-    print('[scraper] Scraping list of tracks from site...')
+    statusMessage("Scraping list of tracks from site...", status="scraper:hrefs")
     trackList = []
     for item in selection:
         link = item.get('href')
@@ -57,25 +87,28 @@ def scrapeHrefs(parsedHtml):
 
         track = {
             'title': musicTitle.replace(' ', '_'),
-            'link': '{}{}'.format(prefix, link),
+            'link': f'{linkPrefix}{link}',
         }
         trackList.append(track)
-    print('[scraper] Found {} tracks.'.format(len(trackList)))
+    statusMessage(f"Found {len(trackList)} tracks.", status="scraper:hrefs")
 
     return trackList
 
 def scrapeSongLinks(trackList):
+    """ Scrape a list of track links from the site.
+    """
+
     musicList = []
     trackCount = len(trackList)
     count = 1
     sleepTimer = 25 if trackCount < 26 else 15
 
     timeOfArrival = (sleepTimer * trackCount) / 60
-    print('[scraper] Grabbing download links in {} second intervals.'.format(sleepTimer))
-    print('[scraper] This is estimated to take {} minutes\n'.format(round(timeOfArrival, 2)))
+    statusMessage(f"Fetching download links in {sleepTimer} second intervals.", status="scraper:links")
+    statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.\n", status="scraper:links")
 
     for track in trackList:
-        print(' TRACK {} OF {}...'.format(count, trackCount))
+        statusMessage(f"TRACK {count} OF {trackCount}...", prefix="")
 
         res = requests.get(track['link'])
         type(res)
@@ -99,26 +132,29 @@ def scrapeSongLinks(trackList):
     return musicList
 
 def downloadTracks(musicList):
+    """ Download a list of links
+    """
+
     trackCount = len(musicList)
     count = 1
     sleepTimer = 10
-    print('\n[download] Starting...\n')
+    statusMessage("Starting...", status="download", prefix="\n", suffix="\n")
 
     for music in musicList:
-        print(' ({} OF {}) | "{}"'.format(count, trackCount, music['title']))
+        statusMessage(f"({count} OF {trackCount}) | '{music['title']}'", prefix="")
 
         download = requests.get(music['link'])
         type(download)
         download.raise_for_status()
 
-        with open('./downloadedTracks/{}.mp3'.format(music['title']), 'wb') as musicFile:
+        with open(f"./downloadedTracks/{music['title']}.mp3", 'wb') as musicFile:
             musicFile.write(download.content)
 
         if count != trackCount:
             time.sleep(sleepTimer)
         count += 1
 
-    print('[download] Complete!')
+    statusMessage("Complete!", status="download")
     cleanDir()
 
 def main():
@@ -134,9 +170,9 @@ def main():
         trackList = scrapeHrefs(html)
         musicList = scrapeSongLinks(trackList)
 
-        if confirmationPrompt("\nDownload music now?"):
+        if confirmationPrompt("Download music now?"):
             downloadTracks(musicList)
 
-    print('[khscraper] Finished!')
+    statusMessage("Finished!", status="khscraper")
 
 main()
