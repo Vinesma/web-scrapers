@@ -133,9 +133,9 @@ def listTracks(musicList):
     """ Print tracks from a list
     """
     clearScreen()
-    for i, track in enumerate(musicList):
+    for i, track in enumerate(musicList, start=1):
         selection = 'x' if track['picked'] else ' '
-        print(f"[{selection}] {i+1} : {track['title']}")
+        print(f"[{selection}] {i} : {track['title']}")
 
 def chooser(musicList):
     """ Exclude/Include tracks for download
@@ -208,9 +208,9 @@ def downloadTracks(musicList):
     downloadHappened = False
     statusMessage("Starting...", status="download", prefix="\n", suffix="\n")
 
-    for i, music in enumerate(musicList):
+    for i, music in enumerate(musicList, start=1):
         if music['picked']:
-            statusMessage(f"({i+1} OF {trackCount}) | '{music['title']}'", prefix="")
+            statusMessage(f"({i} OF {trackCount}) | '{music['title']}'", prefix="")
             download = requests.get(music['link'])
             type(download)
             download.raise_for_status()
@@ -220,7 +220,7 @@ def downloadTracks(musicList):
             downloadHappened = True
 
             # Skip last item's sleep
-            if i+1 != trackCount:
+            if i != trackCount:
                 time.sleep(sleepTimer)
 
     if downloadHappened:
