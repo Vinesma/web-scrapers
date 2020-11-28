@@ -122,7 +122,7 @@ def scrapeSongLinks(trackList):
     statusMessage(f"This is estimated to take {round(timeOfArrival, 2)} minutes.", status="scraper:hrefs", suffix="\n")
 
     for track in trackList:
-        statusMessage(f"TRACK {count} OF {trackCount}...", prefix="")
+        statusMessage(f"TRACK {count:03d} OF {trackCount}...", prefix="")
 
         res = requests.get(track['link'])
         type(res)
@@ -225,7 +225,7 @@ def downloadTracks(musicList):
 
     for i, music in enumerate(musicList, start=1):
         if music['picked']:
-            statusMessage(f"({i} OF {trackCount}) | '{music['title']}'", prefix="")
+            statusMessage(f"({i:03d} OF {trackCount}) | '{music['title']}'", prefix="")
             download = requests.get(music['link'])
             type(download)
             download.raise_for_status()
