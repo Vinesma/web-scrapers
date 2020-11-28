@@ -1,9 +1,10 @@
 import requests, bs4, time, sys, json, os
 
-version = "2.3"
+version = "2.4"
 htmlFile = 'webpage.txt'
-cacheFile = 'musicData.json'
+cacheFile = 'music_data.json'
 linkPrefix = 'https://downloads.khinsider.com'
+supportedLinkPrefix = 'https://downloads.khinsider.com/game-soundtracks/album/'
 
 print("-- KHINSIDER SCRAPER --")
 print(f"V. {version}\n")
@@ -12,6 +13,22 @@ def clearScreen():
     """ Clears the terminal screen using the OS specific method.
     """
     os.system('clear' if sys.platform == 'linux' else 'cls')
+
+def isSupported(link):
+    """ Verify if the provided link is supported
+    """
+    if link.startswith(supportedLinkPrefix):
+        return True
+
+    return False
+
+def foundCache():
+    """ Determine if a cache file exists
+    """
+    if os.path.isfile(cacheFile) and confirmationPrompt("Found a cache file, download it?"):
+        return True
+
+    return False
 
 def textPrompt():
     """ Read user input and return it.
@@ -155,10 +172,8 @@ def chooser(musicList):
             musicList[itemNumber - 1]['picked'] = not isPicked
 
             print(f"[{selection}] : {trackName}")
-        except IndexError as indexError:
-            print(f"Err: {indexError}")
-        except ValueError as valueError:
-            print(f"Err: {valueError}")
+        except (IndexError, ValueError):
+            pass
 
     return musicList
 
@@ -200,7 +215,7 @@ def trackPicker(musicList):
     return musicList
 
 def downloadTracks(musicList):
-    """ Download a list of links
+    """ Download a list of links.
     """
     trackCount = len(musicList)
 
@@ -233,19 +248,24 @@ def downloadTracks(musicList):
             statusMessage("Understood, cleaning house.")
             cleanDir()
 
-def main():
-    if os.path.isfile(cacheFile) and confirmationPrompt("Found a cache file, download it?"):
-        # Load music list from json cache
-        with open(cacheFile, 'r') as cache:
-            musicList = json.load(cache)
+def downloadFromCache():
+    """ Loads json information from cache, then downloads it.
+    """
+    # Load music list from json cache
+    with open(cacheFile, 'r') as cache:
+        musicList = json.load(cache)
 
-        if confirmationPrompt("Show track chooser?"):
-            musicList = trackPicker(musicList)
+    if confirmationPrompt("Show track chooser?"):
+        musicList = trackPicker(musicList)
 
-        downloadTracks(musicList)
-    else:
-        print("Paste link to download from khinsider: ")
-        link = textPrompt()
+    downloadTracks(musicList)
+
+def downloadFromLink():
+    """ Receive a link, download the webpage, list all the music and download it if the user wants.
+    """
+    print("Paste link to download from khinsider: ")
+    link = textPrompt()
+    if isSupported(link):
         downloadWebpage(link)
         html = parseHtml()
         trackList = scrapeHrefs(html)
@@ -256,7 +276,17 @@ def main():
 
         if confirmationPrompt("Download music now?"):
             downloadTracks(musicList)
+    else:
+        print("Err: This link is not supported.")
 
-    statusMessage("Finished!", status="khscraper")
+def main():
+    try:
+        if foundCache():
+            downloadFromCache()
+        else:
+            downloadFromLink()
+        statusMessage("Finished!", status="khscraper")
+    except KeyboardInterrupt:
+        sys.exit("Interrupted by user.")
 
 main()
