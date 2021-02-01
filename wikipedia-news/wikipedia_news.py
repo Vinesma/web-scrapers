@@ -8,10 +8,10 @@ class WikiSpider(scrapy.Spider):
     found_events = []
 
     def parse(self, response):
-        for index, li in enumerate(response.xpath('/html/body/div[3]/div[3]/div[5]/div[1]/table/tbody/tr/td[3]/div[1]/ul/li'), start=1):
-            news_blurb = li.xpath('string(.)').get()[0]
+        for index, li in enumerate(response.xpath("//div[@id='mp-itn']/ul/li"), start=1):
+            news_blurb = li.xpath('string(.)').get()
 
-            self.found_events.append(f"{index}. {news_blurb.replace('(pictured)', '')}")
+            self.found_events.append(f"{index}. {news_blurb.replace(' (pictured)', '')}")
 
 if __name__ == "__main__":
     process = CrawlerProcess({ 'LOG_LEVEL': 'ERROR' })
