@@ -9,7 +9,9 @@ class WikiSpider(scrapy.Spider):
 
     def parse(self, response):
         for index, li in enumerate(response.xpath('/html/body/div[3]/div[3]/div[5]/div[1]/table/tbody/tr/td[3]/div[1]/ul/li'), start=1):
-            self.found_events.append(f"{index}. {li.xpath('string(.)').extract()[0]}")
+            news_blurb = li.xpath('string(.)').extract()[0]
+
+            self.found_events.append(f"{index}. {news_blurb.replace('(pictured)', '')}")
 
 if __name__ == "__main__":
     process = CrawlerProcess({ 'LOG_LEVEL': 'ERROR' })
