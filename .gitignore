@@ -1,3 +1,6 @@
 khinsider/webpage.txt
-khinsider/musicData.json
-khinsider/downloadedTracks/*.mp3
+khinsider/music_data.json
+khinsider/downloadedTracks/*
+env
+.vscode
+*/__pycache__
