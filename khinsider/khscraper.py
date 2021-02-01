@@ -1,13 +1,39 @@
-import requests, bs4, time, sys, json, os
+""" Scrape, view and download music from khscraper.
+"""
 
-version = "2.4"
+import requests, bs4, time, sys, json, os, argparse
+
+version = "3.0"
 htmlFile = 'webpage.txt'
 cacheFile = 'music_data.json'
+url = ""
 linkPrefix = 'https://downloads.khinsider.com'
 supportedLinkPrefix = 'https://downloads.khinsider.com/game-soundtracks/album/'
+quickDownload = False
 
 print("-- KHINSIDER SCRAPER --")
 print(f"V. {version}\n")
+
+def loadArgs():
+    """ Parse and load arguments
+    """
+    global url
+    global quickDownload
+
+    # Initializer
+    parser = argparse.ArgumentParser(description="Scrape, view and download music from khscraper.")
+    # Argument definition
+    # optional
+    parser.add_argument("-q", "--quickdown", help="skip asking and download straightaway after scraping is done. This also skips file selection.", action="store_true")
+    #TODO parser.add_argument("-v", "--verbose", help="make the application more verbose.", action="store_true")
+    # positional
+    parser.add_argument("url", help="URL to the album page")
+    args = parser.parse_args()
+
+    if args.quickdown:
+        quickDownload = True
+
+    url = args.url
 
 def clearScreen():
     """ Clears the terminal screen using the OS specific method.
@@ -255,36 +281,38 @@ def downloadFromCache():
     with open(cacheFile, 'r') as cache:
         musicList = json.load(cache)
 
-    if confirmationPrompt("Show track chooser?"):
+    if not quickDownload and confirmationPrompt("Show track chooser?"):
         musicList = trackPicker(musicList)
 
     downloadTracks(musicList)
 
-def downloadFromLink():
+def downloadFromLink(link):
     """ Receive a link, download the webpage, list all the music and download it if the user wants.
     """
-    print("Paste link to download from khinsider: ")
-    link = textPrompt()
     if isSupported(link):
         downloadWebpage(link)
         html = parseHtml()
         trackList = scrapeHrefs(html)
         musicList = scrapeSongLinks(trackList)
 
-        if confirmationPrompt("Show track chooser?"):
-            musicList = trackPicker(musicList)
+        if not quickDownload:
+            if confirmationPrompt("Show track chooser?"):
+                musicList = trackPicker(musicList)
 
-        if confirmationPrompt("Download music now?"):
+            if confirmationPrompt("Download music now?"):
+                downloadTracks(musicList)
+        else:
             downloadTracks(musicList)
     else:
         print("Err: This link is not supported.")
 
 def main():
+    loadArgs()
     try:
         if foundCache():
             downloadFromCache()
         else:
-            downloadFromLink()
+            downloadFromLink(url)
         statusMessage("Finished!", status="khscraper")
     except KeyboardInterrupt:
         sys.exit("Interrupted by user.")
