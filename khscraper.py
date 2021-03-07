@@ -22,8 +22,8 @@ supported_link_prefix = "https://downloads.khinsider.com/game-soundtracks/album/
 # PATHS
 cache_path = os.path.join(".", "cache")
 download_path = os.path.join(".", "files", "downloaded_files")
-raw_html = os.path.join(cache_path, "webpage.txt")
-cache_file = os.path.join(cache_path, "music_data.json")
+raw_html = os.path.join(cache_path, "kh_webpage.txt")
+cache_file = os.path.join(cache_path, "kh_music_data.json")
 to_clean = [ raw_html, cache_file ]
 
 print("-- KHINSIDER SCRAPER --")
