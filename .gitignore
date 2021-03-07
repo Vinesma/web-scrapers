@@ -1,6 +1,7 @@
-khinsider/webpage.txt
-khinsider/music_data.json
-khinsider/downloadedTracks/*
+webpage.txt
+music_data.json
+files/
+cache/
 env
 .vscode
 */__pycache__
