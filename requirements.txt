@@ -36,7 +36,7 @@ six==1.15.0
 soupsieve==2.1
 toml==0.10.2
 Twisted==20.3.0
-urllib3==1.26.3
+urllib3==1.26.4
 w3lib==1.22.0
 wrapt==1.12.1
 zope.interface==5.2.0
