@@ -1,4 +1,4 @@
-""" 
+"""
 Scrape, view and download music from khinsider.
 """
 import os
@@ -20,7 +20,8 @@ quick_download = False
 linkPrefix = "https://downloads.khinsider.com"
 supported_link_prefix = "https://downloads.khinsider.com/game-soundtracks/album/"
 # PATHS
-cache_path = os.path.join(".", "cache")
+home_path = os.path.expanduser('~')
+cache_path = os.path.join(home_path, ".cache")
 download_path = os.path.join(".", "files", "downloaded_files")
 raw_html = os.path.join(cache_path, "webpage.txt")
 cache_file = os.path.join(cache_path, "music_data.json")
@@ -30,7 +31,7 @@ print("-- KHINSIDER SCRAPER --")
 print(f"V. {version}\n")
 
 def load_args():
-    """ 
+    """
     Parse and load arguments
     """
     global url
@@ -52,13 +53,13 @@ def load_args():
     url = args.url
 
 def clear_screen():
-    """ 
+    """
     Clears the terminal screen using the OS specific method.
     """
     os.system('clear' if sys.platform == 'linux' else 'cls')
 
 def is_supported(link):
-    """ 
+    """
     Verify if the provided link is supported
     """
     if link.startswith(supported_link_prefix):
@@ -67,7 +68,7 @@ def is_supported(link):
     return False
 
 def found_cache():
-    """ 
+    """
     Determine if a cache file exists
     """
     if os.path.isfile(cache_file) and messages.question_bool("Found a cache file, download it?"):
@@ -76,7 +77,7 @@ def found_cache():
     return False
 
 def clean():
-    """ 
+    """
     Clean the directory of all temporary files.
     """
     for file_ in to_clean:
@@ -86,7 +87,7 @@ def clean():
     messages.status("Directory cleaned!", status="clean")
 
 def scrape_hrefs(parsed_html):
-    """ 
+    """
     Scrape a list of all tracks from the site.
     """
     selection = parsed_html.select('.playlistDownloadSong a')
@@ -108,7 +109,7 @@ def scrape_hrefs(parsed_html):
     return tracks
 
 def scrape_song_links(tracks):
-    """ 
+    """
     Scrape a list of track links from the site.
     """
     music_list = []
@@ -144,7 +145,7 @@ def scrape_song_links(tracks):
     return music_list
 
 def list_tracks(music_list):
-    """ 
+    """
     Print tracks from a list
     """
     clear_screen()
@@ -153,7 +154,7 @@ def list_tracks(music_list):
         print(f"[{selection}] {i} : {track['title']}")
 
 def chooser(music_list):
-    """ 
+    """
     Exclude/Include tracks for download
     """
     print("Enter a comma separated list of numbers to exclude/include. Eg. (1,5,8,17)")
@@ -177,7 +178,7 @@ def chooser(music_list):
     return music_list
 
 def track_picker(music_list):
-    """ 
+    """
     Displays a dialog allowing the user to choose what to download.
     """
     clear_screen()
@@ -215,7 +216,7 @@ def track_picker(music_list):
     return music_list
 
 def download_tracks(music_list):
-    """ 
+    """
     Download a list of links.
     """
     track_count = len(music_list)
@@ -251,7 +252,7 @@ def download_tracks(music_list):
             clean()
 
 def download_from_cache():
-    """ 
+    """
     Loads json information from cache, then downloads it.
     """
     # Load music list from json cache
